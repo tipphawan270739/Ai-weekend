@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบเฝ้าระวังและแดชบอร์ดระบาดวิทยา โรคติดเชื้อ COVID-19</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
+        #map { height: 500px; width: 100%; border-radius: 0.75rem; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <header class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center space-x-3 mb-2 md:mb-0">
+                <i class="fa-solid fa-virus-covid text-red-400 text-3xl"></i>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold tracking-wide">รายงานระบาดวิทยา COVID-19 ประเทศไทย</h1>
+                    <p class="text-xs text-indigo-200">ศูนย์ปฏิบัติการฉุกเฉินทางสาธารณสุข (EOC) - ข้อมูลถึงวันที่ 11 สิงหาคม 2021</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="bg-emerald-500 text-xs font-semibold px-3 py-1 rounded-full animate-pulse">
+                    <i class="fa-solid fa-circle text-[8px] mr-1"></i> อัปเดตข้อมูลแล้ว
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center space-x-4">
+                <div class="p-3 bg-red-100 text-red-600 rounded-lg">
+                    <i class="fa-solid fa-hospital-user text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">ผู้ป่วยยืนยันสะสม</p>
+                    <h3 class="text-2xl font-bold text-slate-800">816,989 <span class="text-xs font-normal text-slate-500">ราย</span></h3>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center space-x-4">
+                <div class="p-3 bg-amber-100 text-amber-600 rounded-lg">
+                    <i class="fa-solid fa-chart-line text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">ยอดสูงสุดต่อเดือน (ก.ค. 2021)</p>
+                    <h3 class="text-2xl font-bold text-slate-800">337,986 <span class="text-xs font-normal text-slate-500">ราย</span></h3>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center space-x-4">
+                <div class="p-3 bg-blue-100 text-blue-600 rounded-lg">
+                    <i class="fa-solid fa-users text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">กลุ่มอายุพบสูงสุด (31-45 ปี)</p>
+                    <h3 class="text-2xl font-bold text-slate-800">238,309 <span class="text-xs font-normal text-slate-500">ราย</span></h3>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center space-x-4">
+                <div class="p-3 bg-purple-100 text-purple-600 rounded-lg">
+                    <i class="fa-solid fa-people-arrows text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium">ปัจจัยเสี่ยงหลัก (สัมผัสใกล้ชิด)</p>
+                    <h3 class="text-2xl font-bold text-slate-800">293,040 <span class="text-xs font-normal text-slate-500">ราย</span></h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 1: Map and Table -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center">
+                        <i class="fa-solid fa-map-location-dot text-indigo-600 mr-2"></i> แผนที่แสดงการกระจายตัวของผู้ติดเชื้อรายจังหวัด
+                    </h2>
+                </div>
+                <div id="map"></div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center">
+                        <i class="fa-solid fa-trophy text-amber-500 mr-2"></i> 10 จังหวัดสะสมสูงสุด
+                    </h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-slate-500 bg-slate-100">
+                                <tr>
+                                    <th class="py-2 px-3">อันดับ</th>
+                                    <th class="py-2 px-3">จังหวัด</th>
+                                    <th class="py-2 px-3 text-right">จำนวน (ราย)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100" id="provinceTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Trend Chart -->
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center">
+                <i class="fa-solid fa-chart-area text-emerald-600 mr-2"></i> แนวโน้มการระบาดรายเดือน (มกราคม 2020 - สิงหาคม 2021)
+            </h2>
+            <div class="h-72">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Section 3: Demographic & Risks -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-md font-bold text-slate-800 mb-4">การกระจายตามกลุ่มอายุ</h2>
+                <div class="h-64"><canvas id="ageChart"></canvas></div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-md font-bold text-slate-800 mb-4">สัดส่วนตามเพศ</h2>
+                <div class="h-64"><canvas id="genderChart"></canvas></div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-md font-bold text-slate-800 mb-4">ปัจจัยเสี่ยงสำคัญ</h2>
+                <div class="h-64"><canvas id="riskChart"></canvas></div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
